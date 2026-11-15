@@ -1,0 +1,7 @@
+openai>=1.30
+python-dotenv>=1.0
+jieba>=0.42
+rank_bm25>=0.2
+requests>=2.31
+beautifulsoup4>=4.12
+gradio>=4.0

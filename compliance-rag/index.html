@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compliance RAG — Runnable Reference Implementation</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230f766e' d='M12 2 4 5v6c0 5 3.4 8.5 8 11 4.6-2.5 8-6 8-11V5l-8-3z'/%3E%3Cpath fill='%23fff' d='M10.8 14.6 8.2 12l-1.4 1.4 4 4 6.6-6.6L16 9.4z'/%3E%3C/svg%3E">
+<style>
+:root{
+  --l1:#b91c1c; --l2:#1d4ed8; --teal:#0f766e; --teal-d:#0d5d56;
+  --amber:#b45309; --green:#15803d;
+  --ink:#1e293b; --ink2:#475569; --muted:#64748b;
+  --bg:#f1f5f9; --soft:#f8fafc; --line:#e2e8f0; --navy:#1e293b;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  line-height:1.6; font-size:15px}
+.wrap{max-width:1000px; margin:0 auto; padding:0 20px}
+h1,h2,h3{line-height:1.25; color:var(--ink)}
+p{margin:0 0 12px}
+a{color:var(--teal)}
+
+.masthead{background:var(--navy); color:#fff; padding:32px 0 28px}
+.masthead .brand{display:flex; align-items:center; gap:12px; margin-bottom:12px}
+.masthead .brand svg{flex:0 0 auto}
+.masthead h1{color:#fff; font-size:28px; margin:0}
+.masthead .kicker{font-size:12.5px; letter-spacing:1.5px; text-transform:uppercase; color:#5eead4; margin:0 0 6px}
+.masthead .tagline{color:#cbd5e1; font-size:15px; max-width:760px; margin:0}
+.masthead .row{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:16px}
+.back-link{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22);
+  color:#fff; text-decoration:none; font-size:13.5px; padding:7px 14px; border-radius:8px}
+.back-link:hover{background:rgba(255,255,255,.2)}
+.lang-switch{display:inline-flex; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); border-radius:8px; padding:3px}
+.lang-switch button{border:0; background:transparent; color:#cbd5e1; padding:6px 15px; border-radius:6px; cursor:pointer; font-size:14px; font-family:inherit}
+.lang-switch button.active{background:#fff; color:var(--navy); font-weight:600}
+
+section.block{padding:32px 0 4px}
+.sec-no{display:inline-block; font-size:12px; font-weight:700; color:#fff; background:var(--teal); border-radius:5px; padding:2px 9px; margin-bottom:8px; letter-spacing:.5px}
+.sec-head h2{font-size:21px; margin:0 0 6px}
+.lead{color:var(--ink2); font-size:14.5px; max-width:840px}
+
+.card{background:#fff; border:1px solid var(--line); border-radius:12px; padding:22px; margin-bottom:16px}
+.card h3{font-size:16px; margin:0 0 12px}
+
+.mech-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.mech{background:var(--soft); border:1px solid var(--line); border-left:4px solid var(--teal); border-radius:10px; padding:13px 15px}
+.mech .m-t{font-weight:700; font-size:14px; margin-bottom:4px}
+.mech p{font-size:13px; color:var(--ink2); margin:0}
+
+.metric-row{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+.metric{background:#fff; border:1px solid var(--line); border-top:3px solid var(--teal); border-radius:10px; padding:14px; text-align:center}
+.metric .n{font-size:26px; font-weight:800; color:var(--teal); display:block}
+.metric .l{font-size:12.5px; color:var(--muted)}
+
+.table-scroll{overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:#fff}
+table{border-collapse:collapse; width:100%; min-width:520px; table-layout:fixed}
+thead th{background:var(--navy); color:#fff; text-align:left; font-size:13px; padding:10px 14px; font-weight:600}
+tbody td{padding:9px 14px; font-size:13px; border-top:1px solid var(--line); color:var(--ink2); vertical-align:top}
+tbody td:first-child{font-weight:700; color:var(--ink); white-space:nowrap}
+tbody tr:nth-child(even){background:var(--soft)}
+.lvl{display:inline-block; font-size:11.5px; font-weight:700; padding:2px 8px; border-radius:20px}
+.l1{background:#fee2e2; color:var(--l1)} .l2{background:#fef3c7; color:var(--amber)}
+.l3{background:#dbeafe; color:var(--l2)} .l4{background:#ccfbf1; color:var(--teal)}
+
+.file-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px 18px}
+.file-item{display:flex; gap:10px; font-size:13px; color:var(--ink2)}
+.file-item code{flex:0 0 auto; color:var(--teal); font-family:ui-monospace,Consolas,monospace; font-weight:700}
+
+.note{background:#f0fdfa; border:1px solid #99f6e4; border-left:4px solid var(--teal); border-radius:10px; padding:13px 16px; font-size:13px; color:#115e59; margin-bottom:16px}
+.note p{margin:0}
+
+footer.site-footer{background:var(--navy); color:#cbd5e1; padding:28px 0 26px; margin-top:32px}
+footer .f-disc{font-size:12.5px; color:#94a3b8; margin:0 0 10px}
+footer a{color:#5eead4}
+
+@media (max-width:820px){
+  .mech-grid,.file-grid{grid-template-columns:1fr}
+  .metric-row{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  .wrap{padding:0 15px}
+  .card{padding:16px}
+  .masthead h1{font-size:23px}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path fill="#14b8a6" d="M12 2 4 5v6c0 5 3.4 8.5 8 11 4.6-2.5 8-6 8-11V5l-8-3z"/><path fill="#fff" d="M10.8 14.6 8.2 12l-1.4 1.4 4 4 6.6-6.6L16 9.4z"/></svg>
+      <div>
+        <p class="kicker" data-i18n="kicker">Runnable reference implementation</p>
+        <h1>Compliance RAG</h1>
+      </div>
+    </div>
+    <p class="tagline" data-i18n="tagline">A minimal, verifiable financial-compliance question answerer: every fact is traceable to a source, it refuses when nothing is retrieved, and confidence follows the FTH trust level of the material — not the model's subjective score.</p>
+    <div class="row">
+      <a class="back-link" href="../ace-portal.html">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-i18n="back">Back to ACE Companion</span>
+      </a>
+      <div class="lang-switch"><button data-lang="en" class="active">EN</button><button data-lang="zh">中文</button></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+<section class="block">
+  <div class="sec-head">
+    <span class="sec-no">01</span>
+    <h2 data-i18n="s1">What it is</h2>
+  </div>
+  <p class="lead" data-i18n="s1lead">A single-turn command-line tool (with a local web UI) that answers financial-compliance questions only from four designated documents. The point is not polished answers — it is never fabricating, staying verifiable, and remaining auditable. It is the companion practice project that runs the book's most abstract trust-layering and RAG-security mechanisms in the smallest possible code.</p>
+  <div class="note"><p data-i18n="s1note">The same evidence chain shown conceptually in the Assessor and at enterprise scale in the Case File is real, runnable code here — no mock interface.</p></div>
+</section>
+
+<section class="block">
+  <div class="sec-head">
+    <span class="sec-no">02</span>
+    <h2 data-i18n="s2">Core mechanisms</h2>
+  </div>
+  <div class="card">
+    <div class="mech-grid">
+      <div class="mech"><p class="m-t" data-i18n="m1t">Two refusal lines</p><p data-i18n="m1d">A zero-cost hard block at retrieval when no lexical match exists, plus a model semantic answerability check when wording is related but no answer is present.</p></div>
+      <div class="mech"><p class="m-t" data-i18n="m2t">Mandatory citation anchoring</p><p data-i18n="m2d">Output is structured JSON; every statement carries a citation id and no unsourced statement is allowed.</p></div>
+      <div class="mech"><p class="m-t" data-i18n="m3t">Independent citation verifier</p><p data-i18n="m3d">A separate call first checks structure (does the citation id exist), then semantics (does the source support the claim), balancing the generator's power.</p></div>
+      <div class="mech"><p class="m-t" data-i18n="m4t">Controlled glossary</p><p data-i18n="m4d">Definitional, uncontroversial classifications are written as an auditable whitelist rather than relying on the model's implicit common sense.</p></div>
+      <div class="mech"><p class="m-t" data-i18n="m5t">FTH graded confidence</p><p data-i18n="m5d">Confidence is labelled by source tier — highest for shared conclusions, lowest for differing ones — never exceeding the material's trust level.</p></div>
+      <div class="mech"><p class="m-t" data-i18n="m6t">Local BM25 retrieval</p><p data-i18n="m6d">Runs without an embedding endpoint; the retrieval module can be swapped for vector search without changing any other stage.</p></div>
+    </div>
+  </div>
+</section>
+<section class="block">
+  <div class="sec-head">
+    <span class="sec-no">03</span>
+    <h2 data-i18n="s3">Evaluation results</h2>
+    <p class="lead" data-i18n="s3lead">A real evaluation over 14 questions — 9 inside the knowledge base, 5 outside. The report is stored in tests/eval_report.json.</p>
+  </div>
+  <div class="metric-row">
+    <div class="metric"><span class="n">0</span><span class="l" data-i18n="r1">Unsourced statements</span></div>
+    <div class="metric"><span class="n">100%</span><span class="l" data-i18n="r2">Citation accuracy (21/21)</span></div>
+    <div class="metric"><span class="n">100%</span><span class="l" data-i18n="r3">Out-of-scope refusal</span></div>
+    <div class="metric"><span class="n">21/21</span><span class="l" data-i18n="r4">Items passed</span></div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="sec-head">
+    <span class="sec-no">04</span>
+    <h2 data-i18n="s4">FTH layering of the knowledge base</h2>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <colgroup><col style="width:18%"><col style="width:22%"><col style="width:60%"></colgroup>
+      <thead><tr><th data-i18n="th1">Tier</th><th data-i18n="th2">Trust level</th><th data-i18n="th3">Material</th></tr></thead>
+      <tbody>
+        <tr><td>L1</td><td><span class="lvl l1" data-i18n="lv1">High · law</span></td><td data-i18n="m1">Personal Information Protection Law of the PRC</td></tr>
+        <tr><td>L2</td><td><span class="lvl l2" data-i18n="lv2">Medium-high · regulation</span></td><td data-i18n="m2">Regulation on the Administration of Credit Reporting</td></tr>
+        <tr><td>L3</td><td><span class="lvl l3" data-i18n="lv3">Medium · company policy</span></td><td data-i18n="m3">A bank's published personal-information protection policy</td></tr>
+        <tr><td>L4</td><td><span class="lvl l4" data-i18n="lv4">Low · informal</span></td><td data-i18n="m4">Public financial-consumer FAQ and policy Q&amp;A</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="block">
+  <div class="sec-head">
+    <span class="sec-no">05</span>
+    <h2 data-i18n="s5">Mapping to the book</h2>
+    <p class="lead" data-i18n="s5lead">This is not a single-chapter project; it is a cross-chapter exercise. Its main body is the runnable minimum of Chapter 6, while the other chapters supply the theoretical base, the human fallback and the overall blueprint.</p>
+  </div>
+  <div class="card">
+    <div class="file-grid">
+      <div class="file-item"><code>Ch. 6</code><span data-i18n="c6">RAG architecture security — the runnable implementation; every core mechanism comes from here</span></div>
+      <div class="file-item"><code>Ch. 3</code><span data-i18n="c3">PTB/FTH dual trust boundaries — the theoretical foundation for layering and confidence rules</span></div>
+      <div class="file-item"><code>Ch. 7</code><span data-i18n="c7">Hallucination mitigation — parallel view and the human-review fallback</span></div>
+      <div class="file-item"><code>Ch. 16</code><span data-i18n="c16">End-to-end case — the enterprise blueprint; this project is its minimal slice</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="sec-head">
+    <span class="sec-no">06</span>
+    <h2 data-i18n="s6">Source modules</h2>
+  </div>
+  <div class="card">
+    <div class="file-grid">
+      <div class="file-item"><code>corpus.py</code><span data-i18n="f_corpus">Loads markdown and splits it into self-contained chunks</span></div>
+      <div class="file-item"><code>retriever.py</code><span data-i18n="f_ret">BM25 retrieval and the hard block</span></div>
+      <div class="file-item"><code>generator.py</code><span data-i18n="f_gen">Citation-bearing RAG generation</span></div>
+      <div class="file-item"><code>verifier.py</code><span data-i18n="f_ver">Independent citation verifier — the project's core</span></div>
+      <div class="file-item"><code>glossary.py</code><span data-i18n="f_gloss">Controlled glossary of definitional classifications</span></div>
+      <div class="file-item"><code>cli.py</code><span data-i18n="f_cli">Command-line entry point chaining the whole pipeline</span></div>
+      <div class="file-item"><code>app.py</code><span data-i18n="f_app">Local web UI for demonstration</span></div>
+      <div class="file-item"><code>eval.py</code><span data-i18n="f_eval">Batch evaluation producing the acceptance report</span></div>
+    </div>
+  </div>
+</section>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <p class="f-disc" data-i18n="footDisc"></p>
+    <p class="f-disc" style="margin:0"><a href="../ace-portal.html" data-i18n="back">Back to ACE Companion</a></p>
+  </div>
+</footer>
+<script>
+let lang="en";
+const I18N={
+en:{
+  kicker:"Runnable reference implementation",
+  tagline:"A minimal, verifiable financial-compliance question answerer: every fact is traceable to a source, it refuses when nothing is retrieved, and confidence follows the FTH trust level of the material — not the model's subjective score.",
+  back:"Back to ACE Companion",
+  s1:"What it is",
+  s1lead:"A single-turn command-line tool (with a local web UI) that answers financial-compliance questions only from four designated documents. The point is not polished answers — it is never fabricating, staying verifiable, and remaining auditable. It is the companion practice project that runs the book's most abstract trust-layering and RAG-security mechanisms in the smallest possible code.",
+  s1note:"The same evidence chain shown conceptually in the Assessor and at enterprise scale in the Case File is real, runnable code here — no mock interface.",
+  s2:"Core mechanisms",
+  m1t:"Two refusal lines", m1d:"A zero-cost hard block at retrieval when no lexical match exists, plus a model semantic answerability check when wording is related but no answer is present.",
+  m2t:"Mandatory citation anchoring", m2d:"Output is structured JSON; every statement carries a citation id and no unsourced statement is allowed.",
+  m3t:"Independent citation verifier", m3d:"A separate call first checks structure (does the citation id exist), then semantics (does the source support the claim), balancing the generator's power.",
+  m4t:"Controlled glossary", m4d:"Definitional, uncontroversial classifications are written as an auditable whitelist rather than relying on the model's implicit common sense.",
+  m5t:"FTH graded confidence", m5d:"Confidence is labelled by source tier — highest for shared conclusions, lowest for differing ones — never exceeding the material's trust level.",
+  m6t:"Local BM25 retrieval", m6d:"Runs without an embedding endpoint; the retrieval module can be swapped for vector search without changing any other stage.",
+  s3:"Evaluation results",
+  s3lead:"A real evaluation over 14 questions — 9 inside the knowledge base, 5 outside. The report is stored in tests/eval_report.json.",
+  r1:"Unsourced statements", r2:"Citation accuracy (21/21)", r3:"Out-of-scope refusal", r4:"Items passed",
+  s4:"FTH layering of the knowledge base",
+  th1:"Tier", th2:"Trust level", th3:"Material",
+  lv1:"High · law", lv2:"Medium-high · regulation", lv3:"Medium · company policy", lv4:"Low · informal",
+  m1:"Personal Information Protection Law of the PRC",
+  m2:"Regulation on the Administration of Credit Reporting",
+  m3:"A bank's published personal-information protection policy",
+  m4:"Public financial-consumer FAQ and policy Q&A",
+  s5:"Mapping to the book",
+  s5lead:"This is not a single-chapter project; it is a cross-chapter exercise. Its main body is the runnable minimum of Chapter 6, while the other chapters supply the theoretical base, the human fallback and the overall blueprint.",
+  c6:"RAG architecture security — the runnable implementation; every core mechanism comes from here",
+  c3:"PTB/FTH dual trust boundaries — the theoretical foundation for layering and confidence rules",
+  c7:"Hallucination mitigation — parallel view and the human-review fallback",
+  c16:"End-to-end case — the enterprise blueprint; this project is its minimal slice",
+  s6:"Source modules",
+  f_corpus:"Loads markdown and splits it into self-contained chunks",
+  f_ret:"BM25 retrieval and the hard block",
+  f_gen:"Citation-bearing RAG generation",
+  f_ver:"Independent citation verifier — the project's core",
+  f_gloss:"Controlled glossary of definitional classifications",
+  f_cli:"Command-line entry point chaining the whole pipeline",
+  f_app:"Local web UI for demonstration",
+  f_eval:"Batch evaluation producing the acceptance report",
+  footDisc:"Illustrative engineering material. All organizations, data, test results and metrics are synthetic and simulated for demonstration purposes; they do not represent any real organization or experimental finding."
+},
+zh:{
+  kicker:"可运行参考实现",
+  tagline:"一个最小、可验证的金融合规问答器：每一个事实都可追溯到来源，检索不到就拒答，置信度跟随材料的 FTH 信任层级，而不是模型的主观打分。",
+  back:"返回 ACE Companion",
+  s1:"它是什么",
+  s1lead:"一个单轮命令行工具（带本地网页界面），只基于 4 份指定文档回答金融合规问题。重点不是答案多漂亮，而是绝不编造、可验证、可审计。它是配套实践项目，用最小的代码跑通书中最抽象的信任分层和 RAG 安全机制。",
+  s1note:"在 Assessor 里概念化展示、在 Case File 里企业级呈现的同一条证据链，在这里是真实、可运行的代码，不是模拟界面。",
+  s2:"核心机制",
+  m1t:"两道拒答防线", m1d:"检索阶段无词汇匹配时的零成本硬拦截，加上措辞相关但无答案时的模型语义可答性判断。",
+  m2t:"强制引用锚定", m2d:"输出为结构化 JSON，每条陈述都带引用 id，不允许无来源陈述。",
+  m3t:"独立引用验证器", m3d:"独立调用先查结构（引用 id 是否存在），再查语义（来源是否支持该陈述），平衡生成器的能力。",
+  m4t:"受控术语表", m4d:"定义性、无争议的分类写成可审计白名单，而不是依赖模型的隐性常识。",
+  m5t:"FTH 分层置信度", m5d:"置信度按来源层级标注——共识结论最高、分歧结论最低，绝不超过材料的信任层级。",
+  m6t:"本地 BM25 检索", m6d:"无需嵌入端点即可运行；检索模块可替换为向量检索，不改变其他任何环节。",
+  s3:"评估结果",
+  s3lead:"14 题真实评估——9 题在知识库内、5 题在库外。报告存于 tests/eval_report.json。",
+  r1:"无来源陈述", r2:"引用准确率（21/21）", r3:"文档外拒答率", r4:"通过条目",
+  s4:"知识库的 FTH 分层",
+  th1:"层级", th2:"信任层级", th3:"材料",
+  lv1:"高 · 法律", lv2:"中高 · 行政法规", lv3:"中 · 企业制度", lv4:"低 · 非正式",
+  m1:"《中华人民共和国个人信息保护法》",
+  m2:"《征信业管理条例》",
+  m3:"具体银行公开的个人信息保护政策",
+  m4:"公开金融消费者 FAQ 与政策问答",
+  s5:"与书的对应",
+  s5lead:"这不是单章项目，而是跨章练习。主体是第6章的可运行最小实现，其他章节提供理论地基、人工兜底和整体蓝图。",
+  c6:"RAG 架构安全——可运行实现，每个核心机制都来自这里",
+  c3:"PTB/FTH 双信任边界——分层与置信度规则的理论地基",
+  c7:"幻觉缓解——并行视图与人工复核兜底",
+  c16:"端到端案例——企业蓝图，本项目是其最小切片",
+  s6:"源码模块",
+  f_corpus:"加载 markdown，切分为自包含 chunk",
+  f_ret:"BM25 检索与硬拦截",
+  f_gen:"带引用的 RAG 生成",
+  f_ver:"独立引用验证器——项目核心",
+  f_gloss:"定义性分类的受控术语表",
+  f_cli:"串联整条流水线的命令行入口",
+  f_app:"用于演示的本地网页界面",
+  f_eval:"批量评估，生成验收报告",
+  footDisc:"本页为说明性工程材料。所有组织名称、数据、测试结果与指标均为合成和模拟，用于演示，不代表任何真实组织或实验发现。"
+}
+};
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll("[data-i18n]").forEach(function(el){
+    const v=I18N[lang][el.getAttribute("data-i18n")];
+    if(v!==undefined) el.textContent=v;
+  });
+  document.querySelectorAll(".lang-switch button").forEach(function(b){
+    b.classList.toggle("active", b.getAttribute("data-lang")===lang);
+  });
+}
+document.querySelectorAll(".lang-switch button").forEach(function(b){
+  b.addEventListener("click", function(){ lang=b.getAttribute("data-lang"); applyLang(); });
+});
+applyLang();
+</script>
+</body>
+</html>

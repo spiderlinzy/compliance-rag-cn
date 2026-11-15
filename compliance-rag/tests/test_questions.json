@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "total": 14,
+    "in_scope": 9,
+    "out_of_scope": 5,
+    "note": "这 14 题同时承担两个用途：一是 eval 的验收基准（in_scope 应回答、out_of_scope 应拒答），二是网页演示的机制导览，每题对应一个演示状态，详见 demo_guide.md"
+  },
+  "questions": [
+    {"id": 1, "group": "A 正常回答·四个置信度层级", "category": "in_scope", "question": "什么是敏感个人信息？包括哪些内容？", "expected": "L1 第二十八条", "demo_state": "L1 法律来源，置信度高"},
+    {"id": 2, "group": "A 正常回答·四个置信度层级", "category": "in_scope", "question": "向征信机构查询个人信息，需要取得本人同意吗？", "expected": "L2 第十八条", "demo_state": "L2 行政法规，置信度中高"},
+    {"id": 3, "group": "A 正常回答·四个置信度层级", "category": "in_scope", "question": "工银融e行如何使用Cookie技术？", "expected": "L3 二、Cookie", "demo_state": "L3 企业制度，置信度中"},
+    {"id": 4, "group": "A 正常回答·四个置信度层级", "category": "in_scope", "question": "贷款结清后，之前的不良信息还会在信用报告上展示多久？", "expected": "L4 二、展示5年", "demo_state": "L4 非正式问答，置信度低"},
+
+    {"id": 5, "group": "B 多来源·验证器·术语表", "category": "in_scope", "question": "个人每年可以免费查询几次自己的信用报告？", "expected": "L2 第十二条 / L4 七", "demo_state": "同一结论多来源，取最高层级，弱来源不拉低"},
+    {"id": 6, "group": "B 多来源·验证器·术语表", "category": "in_scope", "question": "个人对自己的个人信息享有哪些权利？", "expected": "L1 第四章 + L4 异议", "demo_state": "不同结论多来源，整体取最低（木桶效应）"},
+    {"id": 7, "group": "B 多来源·验证器·术语表", "category": "in_scope", "question": "发生或可能发生个人信息泄露时，处理者应当怎么办？", "expected": "L1 第五十七条", "demo_state": "独立验证器部分语义拦截（生成6条、拦1条）"},
+    {"id": 8, "group": "B 多来源·验证器·术语表", "category": "in_scope", "question": "个人虹膜识别信息是不是敏感个人信息？", "expected": "L1 第二十八条 + 术语表", "demo_state": "受控术语表支持定义性归类（虹膜属于生物识别）"},
+    {"id": 9, "group": "B 多来源·验证器·术语表", "category": "in_scope", "question": "处理个人信息应当遵循哪些原则？", "expected": "L1 第五至八条", "demo_state": "多条目全部通过验证，展示结构化能力"},
+
+    {"id": 10, "group": "C 拒答·两道防线", "category": "out_of_scope", "question": "个人电话号码是不是敏感个人信息？", "expected": "拒答", "demo_state": "检索通过、生成阶段拒答（材料未将电话列为敏感）"},
+    {"id": 11, "group": "C 拒答·两道防线", "category": "out_of_scope", "question": "今天A股上证指数收在多少点？", "expected": "拒答", "demo_state": "生成阶段拒答（时效性信息，材料无答案）"},
+    {"id": 12, "group": "C 拒答·两道防线", "category": "out_of_scope", "question": "我想开户炒股票，具体要怎么操作？", "expected": "拒答", "demo_state": "生成阶段拒答（材料无操作指引）"},
+    {"id": 13, "group": "C 拒答·两道防线", "category": "out_of_scope", "question": "红烧肉的家常做法是什么？", "expected": "拒答", "demo_state": "硬拦截（词面零命中，完全不相干，不调模型）"},
+    {"id": 14, "group": "C 拒答·两道防线", "category": "out_of_scope", "question": "现在首套房的商业贷款利率是多少？", "expected": "拒答", "demo_state": "硬拦截（词面不命中，零成本拒答）"}
+  ]
+}
